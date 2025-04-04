@@ -142,15 +142,23 @@ void print_insn_detail_ppc(csh handle, cs_insn *ins)
 		printf("\t\tbi: %u\n", ppc->bc.bi);
 		printf("\t\tbo: %u\n", ppc->bc.bo);
 		if (ppc->bc.bh != PPC_BH_INVALID) {
-			int bh=-1;
+			char const* msg = NULL;
 			switch(ppc->bc.bh) {
-				case PPC_BH_SUBROUTINE_RET: bh=0; break;
-				case PPC_BH_NO_SUBROUTINE_RET: bh=1; break;
-				case PPC_BH_NOT_PREDICTABLE: bh=3; break;
-				case PPC_BH_RESERVED: bh=2; break;
+				case PPC_BH_SUBROUTINE_RET:
+					msg = "subroutine return";
+					break;
+				case PPC_BH_NO_SUBROUTINE_RET:
+					msg = "not a subroutine return";
+					break;
+				case PPC_BH_NOT_PREDICTABLE:
+					msg = "unpredictable";
+					break;
+				case PPC_BH_RESERVED:
+					msg = "reserved";
+					break;
 				case PPC_BH_INVALID: break;
 			}
-			printf("\t\tbh: %u\n", bh);
+			printf("\t\tbh: %s\n", msg);
     }
 		if (ppc->bc.pred_cr != PPC_PRED_INVALID) {
 			printf("\t\tcrX: %s\n", cs_reg_name(handle, ppc->bc.crX));
@@ -163,7 +171,7 @@ void print_insn_detail_ppc(csh handle, cs_insn *ins)
 	}
 
 	if (ppc->bc.hint != PPC_BR_NOT_GIVEN)
-		printf("\tBranch hint: %u\n", ppc->bc.hint);
+		printf("\tBranch hint (at bits): %u\n", ppc->bc.hint);
 
 	if (ppc->update_cr0)
 		printf("\tUpdate-CR0: True\n");
