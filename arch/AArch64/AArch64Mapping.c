@@ -900,6 +900,7 @@ static void AArch64_add_cs_groups(MCInst *MI)
 
 static void AArch64_correct_mem_access(MCInst *MI)
 {
+#ifndef CAPSTONE_DIET
 	if (!detail_is_set(MI))
 		return;
 	cs_ac_type access =
@@ -913,6 +914,7 @@ static void AArch64_correct_mem_access(MCInst *MI)
 			return;
 		}
 	}
+#endif
 }
 
 void AArch64_printer(MCInst *MI, SStream *O, void * /* MCRegisterInfo* */ info)
