@@ -234,37 +234,31 @@ class TestExpected:
                 f"{len(actual_insns)} != {len(self.insns):#x}"
             )
             return TestResult.FAILED
+
         for a_insn, e_insn in zip(actual_insns, self.insns):
-            if not compare_asm_text(
-                a_insn,
-                e_insn.get("asm_text"),
-                bits,
-            ):
-                return TestResult.FAILED
+            def _check(res: bool):
+                if not res:
+                    log.error(f"Failed instruction: {a_insn}")
+                    return TestResult.FAILED
 
-            if not compare_str(a_insn.mnemonic, e_insn.get("mnemonic"), "mnemonic"):
-                return TestResult.FAILED
+            _check(compare_asm_text(a_insn, e_insn.get("asm_text"), bits))
 
-            if not compare_str(a_insn.op_str, e_insn.get("op_str"), "op_str"):
-                return TestResult.FAILED
+            _check(compare_str(a_insn.mnemonic, e_insn.get("mnemonic"), "mnemonic"))
 
-            if not compare_enum(a_insn.id, e_insn.get("id"), "id"):
-                return TestResult.FAILED
+            _check(compare_str(a_insn.op_str, e_insn.get("op_str"), "op_str"))
 
-            if not compare_tbool(a_insn.is_alias, e_insn.get("is_alias"), "is_alias"):
-                return TestResult.FAILED
+            _check(compare_enum(a_insn.id, e_insn.get("id"), "id"))
 
-            if not compare_tbool(a_insn.illegal, e_insn.get("illegal"), "illegal"):
-                return TestResult.FAILED
+            _check(compare_tbool(a_insn.is_alias, e_insn.get("is_alias"), "is_alias"))
 
-            if not compare_uint32(a_insn.size, e_insn.get("size"), "size"):
-                return TestResult.FAILED
+            _check(compare_tbool(a_insn.illegal, e_insn.get("illegal"), "illegal"))
 
-            if not compare_enum(a_insn.alias_id, e_insn.get("alias_id"), "alias_id"):
-                return TestResult.FAILED
+            _check(compare_uint32(a_insn.size, e_insn.get("size"), "size"))
 
-            if not compare_details(a_insn, e_insn.get("details")):
-                return TestResult.FAILED
+            _check(compare_enum(a_insn.alias_id, e_insn.get("alias_id"), "alias_id"))
+
+            _check(compare_details(a_insn, e_insn.get("details")))
+
         return TestResult.SUCCESS
 
 
