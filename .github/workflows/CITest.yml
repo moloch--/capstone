@@ -147,6 +147,16 @@ jobs:
       run: |
         sh suite/run_invalid_cstool.sh
 
+    - name: cstest negatives
+      if: startsWith(matrix.config.build-system, 'cmake')
+      run: |
+        ctest --test-dir build --output-on-failure -R NegativeTests1
+        ctest --test-dir build --output-on-failure -R NegativeTests2
+        ctest --test-dir build --output-on-failure -R NegativeTests3
+        ctest --test-dir build --output-on-failure -R NegativeTests4
+        ctest --test-dir build --output-on-failure -R NegativeTests5
+        ctest --test-dir build --output-on-failure -R NegativeTests6
+
     - name: cstest MC
       if: startsWith(matrix.config.build-system, 'cmake')
       run: |
@@ -177,9 +187,12 @@ jobs:
       run: |
         sudo apt-get -y update
         sudo apt-get -y install valgrind
-        valgrind cstest tests
+        valgrind --leak-check=full cstest tests/details
+        valgrind --leak-check=full cstest tests/features
+        valgrind --leak-check=full cstest tests/issues
+        valgrind --leak-check=full cstest tests/MC
 
-    - name: Comaptibility header generation
+    - name: Compatibility header generation
       # clang-format-17 is only available in Ubuntu 24.04
       # Hence the check only happens for it.
       if: startsWith(matrix.config.build-system, 'cmake') && startsWith(matrix.config.os, 'ubuntu-24.04')
