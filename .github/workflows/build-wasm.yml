@@ -1,0 +1,59 @@
+name: Build WASM Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Existing release tag to upload the WASM artifact to"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Build WASM image
+        run: docker build -t capstone-wasm -f Dockerfile .
+
+      - name: Extract WASM artifact
+        run: |
+          container_id=$(docker create capstone-wasm)
+          mkdir -p dist
+          docker cp "${container_id}:/libcapstone.wasm" dist/libcapstone.wasm
+          docker rm "${container_id}"
+
+      - name: Determine release tag
+        id: release_tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+          else
+            tag="${{ github.event.inputs.release_tag }}"
+          fi
+          if [[ -z "$tag" ]]; then
+            echo "Release tag not provided." >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure release exists
+        run: |
+          tag="${{ steps.release_tag.outputs.tag }}"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --notes ""
+
+      - name: Upload WASM to release
+        run: gh release upload "${{ steps.release_tag.outputs.tag }}" dist/libcapstone.wasm --clobber
