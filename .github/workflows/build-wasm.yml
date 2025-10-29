@@ -33,10 +33,8 @@ jobs:
 
       - name: Extract WASM artifact
         run: |
-          container_id=$(docker create capstone-wasm)
-          mkdir -p dist
-          docker cp "${container_id}:/libcapstone.wasm" dist/libcapstone.wasm
-          docker rm "${container_id}"
+          rm -rf dist
+          docker build --target artifact -f Dockerfile --output type=local,dest=dist .
 
       - name: Determine release tag
         id: release_tag
