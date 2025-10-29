@@ -18,8 +18,6 @@ RUN emcmake cmake -S . -B build \
   -DCAPSTONE_BUILD_STATIC_LIBS=OFF \
   -DCMAKE_INSTALL_PREFIX=/opt/capstone \
   -DCMAKE_SHARED_LIBRARY_SUFFIX=.wasm \
-  -DCMAKE_C_FLAGS="-sWASM_BIGINT=1" \
-  -DCMAKE_CXX_FLAGS="-sWASM_BIGINT=1" \
   -DCMAKE_SHARED_LINKER_FLAGS="-sSIDE_MODULE=1 -sEXPORT_ALL=1 -sWASM_BIGINT=1 -sERROR_ON_UNDEFINED_SYMBOLS=0"
 
 RUN cmake --build build --target capstone_shared -- -j"$(nproc)"
