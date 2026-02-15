@@ -177,6 +177,9 @@ if(CAPSTONE_BUILD_STATIC_MSVC_RUNTIME)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
+# The directory for external project patches.
+set(EXTERNAL_PROJ_PATCH_DIR ${PROJECT_SOURCE_DIR}/ext_patches/)
+
 ## sources
 set(SOURCES_ENGINE
     cs.c
@@ -596,25 +599,38 @@ endif()
 if(CAPSTONE_RISCV_SUPPORT)
     add_definitions(-DCAPSTONE_HAS_RISCV)
     set(SOURCES_RISCV
+        arch/RISCV/RISCVBaseInfo.c
         arch/RISCV/RISCVDisassembler.c
+        arch/RISCV/RISCVDisassemblerExtension.c
         arch/RISCV/RISCVInstPrinter.c
         arch/RISCV/RISCVMapping.c
         arch/RISCV/RISCVModule.c
     )
     set(HEADERS_RISCV
         arch/RISCV/RISCVBaseInfo.h
-        arch/RISCV/RISCVDisassembler.h
+        arch/RISCV/RISCVDisassemblerExtension.h
         arch/RISCV/RISCVInstPrinter.h
         arch/RISCV/RISCVMapping.h
         arch/RISCV/RISCVModule.h
+        arch/RISCV/RISCVLinkage.h
         arch/RISCV/RISCVGenAsmWriter.inc
+        arch/RISCV/RISCVGenCSAliasMnemMap.inc
+        arch/RISCV/RISCVGenCSFeatureName.inc
+        arch/RISCV/RISCVGenCSMappingInsn.inc
+        arch/RISCV/RISCVGenCSMappingInsnName.inc
+        arch/RISCV/RISCVGenCSMappingInsnOp.inc
+        arch/RISCV/RISCVGenCSOpGroup.inc
+        arch/RISCV/RISCVGenCSSystemOperandsEnum.inc
         arch/RISCV/RISCVGenDisassemblerTables.inc
-        arch/RISCV/RISCVGenInsnNameMaps.inc
         arch/RISCV/RISCVGenInstrInfo.inc
         arch/RISCV/RISCVGenRegisterInfo.inc
         arch/RISCV/RISCVGenSubtargetInfo.inc
-        arch/RISCV/RISCVMappingInsn.inc
-        arch/RISCV/RISCVMappingInsnOp.inc
+        arch/RISCV/RISCVGenSystemOperands.inc
+        arch/RISCV/RISCVGenCompressedInstructionsInfo.inc
+        arch/RISCV/RISCVGenCSAliasEnum.inc
+        arch/RISCV/RISCVGenCSFeatureEnum.inc
+        arch/RISCV/RISCVGenCSInsnEnum.inc
+        arch/RISCV/RISCVGenCSRegEnum.inc
     )
 endif()
 
@@ -811,6 +827,7 @@ set_property(TARGET capstone PROPERTY C_STANDARD 99)
 target_include_directories(capstone PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 )
+set_property(TARGET capstone PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(CAPSTONE_BUILD_STATIC_LIBS)
     add_library(capstone_static STATIC $<TARGET_OBJECTS:capstone>)
@@ -822,7 +839,6 @@ if(CAPSTONE_BUILD_STATIC_LIBS)
 endif()
 
 if(CAPSTONE_BUILD_SHARED_LIBS)
-    set_property(TARGET capstone PROPERTY POSITION_INDEPENDENT_CODE 1)
     add_library(capstone_shared SHARED $<TARGET_OBJECTS:capstone>)
     # Use normal capstone name. Otherwise we get libcapstone_shared.so
     set_target_properties(capstone_shared PROPERTIES OUTPUT_NAME "capstone")

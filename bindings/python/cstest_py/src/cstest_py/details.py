@@ -8,6 +8,7 @@ from capstone import (
     Cs,
     CsInsn,
 )
+import capstone
 from capstone.alpha_const import ALPHA_OP_IMM, ALPHA_OP_REG
 from capstone.bpf_const import (
     BPF_OP_REG,
@@ -71,7 +72,8 @@ from capstone.m68k_const import (
 )
 from capstone.mips_const import MIPS_OP_REG, MIPS_OP_IMM, MIPS_OP_MEM
 from capstone.mos65xx_const import MOS65XX_OP_REG, MOS65XX_OP_MEM, MOS65XX_OP_IMM
-from capstone.riscv_const import RISCV_OP_MEM, RISCV_OP_IMM, RISCV_OP_REG
+from capstone.riscv import RISCV_OP_FP
+from capstone.riscv_const import RISCV_OP_CSR, RISCV_OP_MEM, RISCV_OP_IMM, RISCV_OP_REG
 from capstone.sh_const import SH_OP_REG, SH_OP_MEM, SH_OP_IMM
 from capstone.sparc_const import SPARC_OP_REG, SPARC_OP_IMM, SPARC_OP_MEM, SPARC_OP_ASI, SPARC_OP_MEMBAR_TAG
 from capstone.systemz_const import SYSTEMZ_OP_REG, SYSTEMZ_OP_IMM, SYSTEMZ_OP_MEM
@@ -965,7 +967,7 @@ def test_expected_alpha(actual: CsInsn, expected: dict) -> bool:
             if not compare_reg(actual, aop.reg, eop.get("reg"), "reg"):
                 return False
         elif aop.type == ALPHA_OP_IMM:
-            if not compare_int32(aop.imm, eop.get("imm"), "imm"):
+            if not compare_int64(aop.imm, eop.get("imm"), "imm"):
                 return False
         else:
             raise ValueError("Operand type not handled.")
@@ -1169,13 +1171,25 @@ def test_expected_m68k(actual: CsInsn, expected: dict) -> bool:
                 aop.mem.index_size, eop["mem"].get("index_size"), "index_size"
             ):
                 return False
+            if not compare_tbool(
+                aop.mem.in_disp_size, eop["mem"].get("in_disp_size"), "in_disp_size"
+            ):
+                return False
+            if not compare_tbool(
+                aop.mem.out_disp_size, eop["mem"].get("out_disp_size"), "out_disp_size"
+            ):
+                return False
+            if not compare_tbool(
+                aop.mem.disp_size, eop["mem"].get("disp_size"), "disp_size"
+            ):
+                return False
             if not compare_int16(aop.mem.disp, eop["mem"].get("disp"), "disp"):
                 return False
-            if not compare_uint32(
+            if not compare_int32(
                 aop.mem.in_disp, eop["mem"].get("in_disp"), "in_disp"
             ):
                 return False
-            if not compare_uint32(
+            if not compare_int32(
                 aop.mem.out_disp, eop["mem"].get("out_disp"), "out_disp"
             ):
                 return False
@@ -1332,6 +1346,12 @@ def test_expected_riscv(actual: CsInsn, expected: dict) -> bool:
             if not compare_reg(actual, aop.mem.base, eop.get("mem_base"), "mem_base"):
                 return False
             if not compare_int64(aop.mem.disp, eop.get("mem_disp"), "mem_disp"):
+                return False
+        elif aop.type == RISCV_OP_FP:
+            if not compare_fp(aop.dimm, eop.get("dimm"), "dimm"):
+                return False
+        elif aop.type == RISCV_OP_CSR:
+            if not compare_uint16(aop.csr, capstone.riscv.SYSREG_NAME_TO_VAL[eop.get("csr")], "csr"):
                 return False
         else:
             raise ValueError("Operand type not handled.")

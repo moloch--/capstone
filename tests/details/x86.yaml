@@ -5933,3 +5933,822 @@ test_cases:
             eflags: [ X86_EFLAGS_TEST_OF, X86_EFLAGS_TEST_SF, X86_EFLAGS_TEST_ZF ]
           regs_read: [ rflags, rip ]
           regs_write: [ rip ]
+
+  -
+    input:
+      name: "Loop according to ECX count, 16-bit decode mode"
+      bytes: [
+       0xe2, 0x32,   # loop 0x34
+       0xe1, 0x30,   # loope 0x34
+       0xe0, 0x2e,   # loopne 0x34
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_16 ]
+    expected:
+      insns:
+      -
+        asm_text: "loop 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe2, 0x00, 0x00, 0x00 ]
+          regs_read: [ ip, cx ]
+          regs_write: [ ip, cx ]
+      -
+        asm_text: "loope 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe1, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ ip, cx, flags ]
+          regs_write: [ ip, cx ]
+      -
+        asm_text: "loopne 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe0, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ ip, cx, flags ]
+          regs_write: [ ip, cx ]
+
+  -
+    input:
+      name: "Loop according to ECX count, 32-bit decode mode"
+      bytes: [
+       0xe2, 0x32,   # loop 0x34
+       0xe1, 0x30,   # loope 0x34
+       0xe0, 0x2e,   # loopne 0x34
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_32 ]
+    expected:
+      insns:
+      -
+        asm_text: "loop 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe2, 0x00, 0x00, 0x00 ]
+          regs_read: [ eip, ecx ]
+          regs_write: [ eip, ecx ]
+      -
+        asm_text: "loope 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe1, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ eip, ecx, eflags ]
+          regs_write: [ eip, ecx ]
+      -
+        asm_text: "loopne 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe0, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ eip, ecx, eflags ]
+          regs_write: [ eip, ecx ]
+
+  -
+    input:
+      name: "Loop according to ECX count, 64-bit decode mode"
+      bytes: [
+       0xe2, 0x32,         # loop 0x34
+       0x48, 0xe2, 0x2f,   # REX.W loop 0x34 (should ignore REX)
+       0x67, 0xe2, 0x2c,   # loop 0x34 (with size override)
+       0xe1, 0x2a,         # loope 0x34
+       0x48, 0xe1, 0x27,   # REX.W loop 0x34 (should ignore REX)
+       0x67, 0xe1, 0x24,   # loop 0x34 (with size override)
+       0xe0, 0x22,         # loope 0x34
+       0x48, 0xe0, 0x1f,   # REX.W loop 0x34 (should ignore REX)
+       0x67, 0xe0, 0x1c,   # loop 0x34 (with size override)
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_64 ]
+    expected:
+      insns:
+      -
+        asm_text: "loop 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe2, 0x00, 0x00, 0x00 ]
+          regs_read: [ rip, rcx ]
+          regs_write: [ rip, rcx ]
+      -
+        asm_text: "loop 0x34"
+        details:
+          x86:
+            rex: 0x48
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe2, 0x00, 0x00, 0x00 ]
+          regs_read: [ rip, rcx ]
+          regs_write: [ rip, rcx ]
+      -
+        asm_text: "loop 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_ADDRSIZE ]
+            opcode: [ 0xe2, 0x00, 0x00, 0x00 ]
+          regs_read: [ rip, rcx ]
+          regs_write: [ rip, rcx ]      # BUG: should be ecx
+      -
+        asm_text: "loope 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe1, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ rip, rcx, rflags ]
+          regs_write: [ rip, rcx ]
+      -
+        asm_text: "loope 0x34"
+        details:
+          x86:
+            rex: 0x48
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe1, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ rip, rcx, rflags ]
+          regs_write: [ rip, rcx ]
+      -
+        asm_text: "loope 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_ADDRSIZE ]
+            opcode: [ 0xe1, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ rip, rcx, rflags ]
+          regs_write: [ rip, rcx ]      # BUG: should be ecx
+      -
+        asm_text: "loopne 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe0, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ rip, rcx, rflags ]
+          regs_write: [ rip, rcx ]
+      -
+        asm_text: "loopne 0x34"
+        details:
+          x86:
+            rex: 0x48
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe0, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ rip, rcx, rflags ]
+          regs_write: [ rip, rcx ]
+      -
+        asm_text: "loopne 0x34"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_ADDRSIZE ]
+            opcode: [ 0xe0, 0x00, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_TEST_ZF ]
+          regs_read: [ rip, rcx, rflags ]
+          regs_write: [ rip, rcx ]      # BUG: should be ecx
+
+  -
+    input:
+      name: "Unconditional jump, 16-bit decode mode"
+      bytes: [
+         0xeb, 0x10,                     # jmp 0x12
+         0xe9, 0x2f, 0x12,               # jmp 0x1234
+         0xff, 0xa0, 0x34, 0x12,         # jmp word ptr [bx+si+0x1234]
+         0xff, 0xe0,                     # jmp ax
+         0xea, 0x34, 0x12, 0x78, 0x56,   # ljmp 0x5678:0x1234
+         0xff, 0xa8, 0x34, 0x12,         # jmp far [bx + si + 0x1234]
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_16 ]
+    expected:
+      insns:
+      -
+        asm_text: "jmp 0x12"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xeb, 0x00, 0x00, 0x00 ]
+          regs_read: [ ip ]
+          regs_write: [ ip ]
+      -
+        asm_text: "jmp 0x1234"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe9, 0x00, 0x00, 0x00 ]
+          regs_read: [ ip ]
+          regs_write: [ ip ]
+      -
+        asm_text: "jmp word ptr [bx + si + 0x1234]"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ bx, si ]
+          regs_write: [ ip ]
+      -
+        asm_text: "jmp ax"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ ax ]
+          regs_write: [ ip ]
+      -
+        asm_text: "ljmp 0x5678:0x1234"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xea, 0x00, 0x00, 0x00 ]
+          regs_read: [ ]
+          regs_write: [ ip ]
+      -
+        asm_text: "ljmp [bx + si + 0x1234]"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ ]
+          regs_write: [ ip ]
+
+  -
+    input:
+      name: "Unconditional jump, 32-bit decode mode"
+      bytes: [
+         0xeb, 0x10,                                 # jmp 0x12
+         0xe9, 0x71, 0x56, 0x34, 0x12,               # jmp 0x1234
+         0xff, 0xa0, 0x78, 0x56, 0x34, 0x12,         # jmp dword ptr [eax+0x12345678]
+         0xff, 0xe0,                                 # jmp eax
+         0xea, 0x78, 0x56, 0x34, 0x12, 0x78, 0x56,   # ljmp 0x5678:0x12345678
+         0xff, 0xa8, 0x78, 0x56, 0x34, 0x12,         # jmp far [eax + 0x1234]
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_32 ]
+    expected:
+      insns:
+      -
+        asm_text: "jmp 0x12"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xeb, 0x00, 0x00, 0x00 ]
+          regs_read: [ eip ]
+          regs_write: [ eip ]
+      -
+        asm_text: "jmp 0x12345678"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe9, 0x00, 0x00, 0x00 ]
+          regs_read: [ eip ]
+          regs_write: [ eip ]
+      -
+        asm_text: "jmp dword ptr [eax + 0x12345678]"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ eax ]
+          regs_write: [ eip ]
+      -
+        asm_text: "jmp eax"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ eax ]
+          regs_write: [ eip ]
+      -
+        asm_text: "ljmp 0x5678:0x12345678"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xea, 0x00, 0x00, 0x00 ]
+          regs_read: [ ]
+          regs_write: [ eip ]
+      -
+        asm_text: "jmp ptr [eax + 0x12345678]"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ eax ]
+          regs_write: [ eip ]
+
+  -
+    input:
+      name: "Unconditional jump, 64-bit decode mode"
+      bytes: [
+         0xeb, 0x10,                                 # jmp 0x12
+         0xe9, 0x71, 0x56, 0x34, 0x12,               # jmp 0x12345678
+         0xff, 0xa0, 0x78, 0x56, 0x34, 0x12,         # jmp qword ptr [rax+0x12345678]
+         0xff, 0xe0,                                 # jmp rax
+         0xff, 0xa8, 0x78, 0x56, 0x34, 0x12,         # jmp ptr far [rax + 0x12345678]
+         0x48, 0xff, 0xa8, 0x78, 0x56, 0x34, 0x12,   # REX.W jmp ptr far [rax + 0x12345678]
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_64 ]
+    expected:
+      insns:
+      -
+        asm_text: "jmp 0x12"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xeb, 0x00, 0x00, 0x00 ]
+          regs_read: [ rip ]
+          regs_write: [ rip ]
+      -
+        asm_text: "jmp 0x12345678"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xe9, 0x00, 0x00, 0x00 ]
+          regs_read: [ rip ]
+          regs_write: [ rip ]
+      -
+        asm_text: "jmp qword ptr [rax + 0x12345678]"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ rax ]
+          regs_write: [ rip ]
+      -
+        asm_text: "jmp rax"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ rax ]
+          regs_write: [ rip ]
+      -
+        asm_text: "jmp ptr [rax + 0x12345678]"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ rax ]
+          regs_write: [ rip ]
+      -
+        asm_text: "ljmp [rax + 0x12345678]"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0xff, 0x00, 0x00, 0x00 ]
+          regs_read: [ rax ]
+          regs_write: [ rip ]
+
+  -
+    input:
+      name: "System call instructions, 16-bit decode"
+      bytes: [
+         0x0f, 0x34,            # sysenter
+         0x0f, 0x35,            # sysexit
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_16 ]
+    expected:
+      insns:
+      -
+        asm_text: "sysenter"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x34, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_MODIFY_IF ]
+          regs_read: [ ]
+          regs_write: [ ip, sp, flags ]
+      -
+        asm_text: "sysexit"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x35, 0x00, 0x00 ]
+            eflags: [ ]
+          regs_read: [ cx, dx ]
+          regs_write: [ ip, sp ]
+
+  -
+    input:
+      name: "System call instructions, 32-bit decode"
+      bytes: [
+         0x0f, 0x34,            # sysenter
+         0x0f, 0x35,            # sysexit
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_32 ]
+    expected:
+      insns:
+      -
+        asm_text: "sysenter"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x34, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_MODIFY_IF ]
+          regs_read: [ ]
+          regs_write: [ eip, esp, eflags ]
+      -
+        asm_text: "sysexit"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x35, 0x00, 0x00 ]
+            eflags: [ ]
+          regs_read: [ ecx, edx ]
+          regs_write: [ eip, esp ]
+
+  -
+    input:
+      name: "System call instructions, 64-bit decode"
+      bytes: [
+         0x0f, 0x05,            # syscall
+         0x0f, 0x34,            # sysenter
+         0x0f, 0x35,            # sysexit
+         0x40, 0x0f, 0x35,      # REX.W sysexit
+         0x0f, 0x07,            # sysret
+         0x40, 0x0f, 0x07,      # REX.W sysret
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_64 ]
+    expected:
+      insns:
+      -
+        asm_text: "syscall"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x05, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_TF, X86_EFLAGS_MODIFY_IF, X86_EFLAGS_MODIFY_DF, X86_EFLAGS_MODIFY_NT, X86_EFLAGS_MODIFY_RF ] # should write all flags
+          regs_read: [ ]
+          regs_write: [ rip, rcx, r11, rflags ]
+      -
+        asm_text: "sysenter"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x34, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_MODIFY_IF ]
+          regs_read: [ ]
+          regs_write: [ rip, rsp, rflags ]
+      -
+        asm_text: "sysexit"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x35, 0x00, 0x00 ]
+            eflags: [ ]
+          regs_read: [ rcx, rdx ]
+          regs_write: [ rip, rsp ]
+      -
+        asm_text: "sysexit"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x35, 0x00, 0x00 ]
+            eflags: [ ]
+          regs_read: [ rcx, rdx ]
+          regs_write: [ rip, rsp ]
+      -
+        asm_text: "sysret"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x07, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_TF, X86_EFLAGS_MODIFY_IF, X86_EFLAGS_MODIFY_DF, X86_EFLAGS_MODIFY_NT, X86_EFLAGS_MODIFY_RF ]
+          regs_read: [ rcx, r11 ]
+          regs_write: [ rip, rflags ]
+      -
+        asm_text: "sysret"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0x07, 0x00, 0x00 ]
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_TF, X86_EFLAGS_MODIFY_IF, X86_EFLAGS_MODIFY_DF, X86_EFLAGS_MODIFY_NT, X86_EFLAGS_MODIFY_RF ]
+          regs_read: [ rcx, r11 ]
+          regs_write: [ rip, rflags ]
+
+  -
+    input:
+      name: "Compare and exchange, 16-bit decode mode"
+      bytes: [
+         0x0f, 0xb0, 0xfe,                  # cmpxchg dh, bh
+         0x0f, 0xb0, 0xb6, 0x34, 0x12,      # cmpxchg byte ptr [bp + 0x1234], dh
+         0x0f, 0xb1, 0xfe,                  # cmpxchg si, di
+         0x0f, 0xb1, 0xb6, 0x34, 0x12,      # cmpxchg byte ptr [bp + 0x1234], si
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_16 ]
+    expected:
+      insns:
+      -
+        asm_text: "cmpxchg dh, bh"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb0, 0x0, 0x0 ]
+            addr_size: 2
+            operands:
+              -
+                type: X86_OP_REG
+                reg: dh
+                access: CS_AC_WRITE      # BUG: dh is also read
+              -
+                type: X86_OP_REG
+                reg: bh
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ al, bh ]      # BUG: dh is also read
+          regs_write: [ al, flags, dh ]
+      -
+        asm_text: "cmpxchg byte ptr [bp + 0x1234], dh"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb0, 0x0, 0x0 ]
+            addr_size: 2
+            operands:
+              -
+                type: X86_OP_MEM
+                mem_base: bp
+                mem_disp: 0x1234
+                size: 1
+                access: CS_AC_READ  # BUG: memory operand is also written
+              -
+                type: X86_OP_REG
+                reg: dh
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ al, bp, dh ]
+          regs_write: [ al, flags ]
+      -
+        asm_text: "cmpxchg si, di"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb1, 0x0, 0x0 ]
+            addr_size: 2
+            operands:
+              -
+                type: X86_OP_REG
+                reg: si
+                access: CS_AC_WRITE      # BUG: si is also read
+              -
+                type: X86_OP_REG
+                reg: di
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ ax, di ]
+          regs_write: [ ax, flags, si ]
+      -
+        asm_text: "cmpxchg word ptr [bp + 0x1234], si"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb1, 0x0, 0x0 ]
+            addr_size: 2
+            operands:
+              -
+                type: X86_OP_MEM
+                mem_base: bp
+                mem_disp: 0x1234
+                size: 2
+                access: CS_AC_READ  # BUG: memory operand is also written
+              -
+                type: X86_OP_REG
+                reg: si
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF,  ]
+          regs_read: [ ax, bp, si ]
+          regs_write: [ ax, flags ]
+
+  -
+    input:
+      name: "Compare and exchange, 32-bit decode mode"
+      bytes: [
+         0x0f, 0xb0, 0xfe,                          # cmpxchg dh, bh
+         0x0f, 0xb0, 0xb6, 0x34, 0x12, 0x0, 0x0,    # cmpxchg byte ptr [esi + 0x1234], dh
+         0x0f, 0xb1, 0xfe,                          # cmpxchg esi, edi
+         0x0f, 0xb1, 0xb6, 0x34, 0x12, 0x0, 0x0     # cmpxchg byte ptr [esi + 0x1234], esi
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_32 ]
+    expected:
+      insns:
+      -
+        asm_text: "cmpxchg dh, bh"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb0, 0x0, 0x0 ]
+            operands:
+              -
+                type: X86_OP_REG
+                reg: dh
+                access: CS_AC_WRITE      # BUG: dh is also read
+              -
+                type: X86_OP_REG
+                reg: bh
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ al, bh ]      # BUG: dh is also read
+          regs_write: [ al, eflags, dh ]
+      -
+        asm_text: "cmpxchg byte ptr [esi + 0x1234], dh"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb0, 0x0, 0x0 ]
+            addr_size: 4
+            operands:
+              -
+                type: X86_OP_MEM
+                mem_base: esi
+                mem_disp: 0x1234
+                size: 1
+                access: CS_AC_READ  # BUG: memory operand is also written
+              -
+                type: X86_OP_REG
+                reg: dh
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ al, esi, dh ]
+          regs_write: [ al, eflags ]
+      -
+        asm_text: "cmpxchg esi, edi"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb1, 0x0, 0x0 ]
+            operands:
+              -
+                type: X86_OP_REG
+                reg: esi
+                access: CS_AC_WRITE      # BUG: esi is also read
+              -
+                type: X86_OP_REG
+                reg: edi
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ eax, edi ]
+          regs_write: [ eax, eflags, esi ]
+      -
+        asm_text: "cmpxchg dword ptr [esi + 0x1234], esi"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb1, 0x0, 0x0 ]
+            addr_size: 4
+            operands:
+              -
+                type: X86_OP_MEM
+                mem_base: esi
+                mem_disp: 0x1234
+                size: 4
+                access: CS_AC_READ  # BUG: memory operand is also written
+              -
+                type: X86_OP_REG
+                reg: esi
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF,  ]
+          regs_read: [ eax, esi ]
+          regs_write: [ eax, eflags ]
+
+  -
+    input:
+      name: "Compare and exchange, 64-bit decode mode"
+      bytes: [
+         0x0f, 0xb0, 0xfe,                                # cmpxchg dh, bh
+         0x0f, 0xb0, 0xb6, 0x34, 0x12, 0x0, 0x0,          # cmpxchg byte ptr [rsi + 0x1234], dh
+         0x0f, 0xb1, 0xfe,                                # cmpxchg esi, edi
+         0x0f, 0xb1, 0xb6, 0x34, 0x12, 0x0, 0x0,          # cmpxchg byte ptr [rsi + 0x1234], esi
+         0x40, 0x0f, 0xb1, 0xfe,                          # REX.W cmpxchg rsi, rdi
+         0x40, 0x0f, 0xb1, 0xb6, 0x34, 0x12, 0x0, 0x0     # REX.W cmpxchg qword ptr [rsi + 0x1234], rsi
+      ]
+      arch: "x86"
+      options: [ CS_OPT_DETAIL, CS_MODE_64 ]
+    expected:
+      insns:
+      -
+        asm_text: "cmpxchg dh, bh"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb0, 0x0, 0x0 ]
+            operands:
+              -
+                type: X86_OP_REG
+                reg: dh
+                access: CS_AC_WRITE      # BUG: dh is also read
+              -
+                type: X86_OP_REG
+                reg: bh
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ al, bh ]      # BUG: dh is also read
+          regs_write: [ al, rflags, dh ]
+      -
+        asm_text: "cmpxchg byte ptr [rsi + 0x1234], dh"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb0, 0x0, 0x0 ]
+            addr_size: 8
+            operands:
+              -
+                type: X86_OP_MEM
+                mem_base: rsi
+                mem_disp: 0x1234
+                size: 1
+                access: CS_AC_READ  # BUG: memory operand is also written
+              -
+                type: X86_OP_REG
+                reg: dh
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ al, rsi, dh ]
+          regs_write: [ al, rflags ]
+      -
+        asm_text: "cmpxchg esi, edi"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb1, 0x0, 0x0 ]
+            operands:
+              -
+                type: X86_OP_REG
+                reg: esi
+                access: CS_AC_WRITE      # BUG: esi is also read
+              -
+                type: X86_OP_REG
+                reg: edi
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ eax, edi ]
+          regs_write: [ eax, rflags, esi ]
+      -
+        asm_text: "cmpxchg dword ptr [rsi + 0x1234], esi"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb1, 0x0, 0x0 ]
+            addr_size: 8
+            operands:
+              -
+                type: X86_OP_MEM
+                mem_base: rsi
+                mem_disp: 0x1234
+                size: 4
+                access: CS_AC_READ  # BUG: memory operand is also written
+              -
+                type: X86_OP_REG
+                reg: esi
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF,  ]
+          regs_read: [ eax, rsi, esi ]
+          regs_write: [ eax, rflags ]
+      -
+        asm_text: "cmpxchg esi, edi"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb1, 0x0, 0x0 ]
+            operands:
+              -
+                type: X86_OP_REG
+                reg: esi
+                access: CS_AC_WRITE      # BUG: esi is also read
+              -
+                type: X86_OP_REG
+                reg: edi
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF  ]
+          regs_read: [ eax, edi ]
+          regs_write: [ eax, rflags, esi ]
+      -
+        asm_text: "cmpxchg dword ptr [rsi + 0x1234], esi"
+        details:
+          x86:
+            prefix: [ X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0, X86_PREFIX_0 ]
+            opcode: [ 0x0f, 0xb1, 0x0, 0x0 ]
+            addr_size: 8
+            operands:
+              -
+                type: X86_OP_MEM
+                mem_base: rsi
+                mem_disp: 0x1234
+                size: 4
+                access: CS_AC_READ  # BUG: memory operand is also written
+              -
+                type: X86_OP_REG
+                reg: esi
+                access: CS_AC_READ
+            eflags: [ X86_EFLAGS_MODIFY_AF, X86_EFLAGS_MODIFY_CF, X86_EFLAGS_MODIFY_OF, X86_EFLAGS_MODIFY_PF, X86_EFLAGS_MODIFY_SF, X86_EFLAGS_MODIFY_ZF,  ]
+          regs_read: [ eax, rsi, esi ]
+          regs_write: [ eax, rflags ]

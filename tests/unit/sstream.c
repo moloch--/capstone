@@ -4,6 +4,7 @@
 #include "unit_test.h"
 #include "../SStream.h"
 #include "../utils.h"
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -594,6 +595,76 @@ bool test_replc_str()
 	return true;
 }
 
+bool test_printfFloat()
+{
+	printf("Test test_printfFloat\n");
+
+	SStream OS = { 0 };
+	SStream_Init(&OS);
+
+	printfFloat(&OS, "%f", 1.5f);
+	CHECK_OS_EQUAL_RET_FALSE(OS, "1.500000");
+	SStream_Flush(&OS, NULL);
+
+	printfFloat(&OS, "%.2f", 1.5f);
+	CHECK_OS_EQUAL_RET_FALSE(OS, "1.50");
+	SStream_Flush(&OS, NULL);
+
+	printfFloat(&OS, "%+.2f", -2.25f);
+	CHECK_OS_EQUAL_RET_FALSE(OS, "-2.25");
+	SStream_Flush(&OS, NULL);
+
+	printfFloat(&OS, "%e", 0.0f);
+	CHECK_OS_EQUAL_RET_FALSE(OS, "0.000000e+00");
+	SStream_Flush(&OS, NULL);
+
+	printfFloat(&OS, "%f", NAN);
+	CHECK_OS_EQUALS_ANY_RET_FALSE(OS, "nan", "NaN", "NAN", "nan(ind)",
+				      "NaN(ind)", "NAN(ind)");
+	SStream_Flush(&OS, NULL);
+
+	printfFloat(&OS, "%f", INFINITY);
+	CHECK_OS_EQUALS_ANY_RET_FALSE(OS, "inf", "Inf", "INF", "infinity",
+				      "Infinity", "INFINITY");
+	SStream_Flush(&OS, NULL);
+
+	printfFloat(&OS, "%f", -INFINITY);
+	CHECK_OS_EQUALS_ANY_RET_FALSE(OS, "-inf", "-Inf", "-INF", "-infinity",
+				      "-Infinity", "-INFINITY");
+	SStream_Flush(&OS, NULL);
+
+	return true;
+}
+
+static int evil_vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
+{
+	(void)str;
+	(void)size;
+	(void)fmt;
+	(void)ap;
+	return -1; // forces index underflow
+}
+
+/// Possible underflow of SStream.index and subsequent OOB reads/writes.
+/// Reported by Finder16.
+bool test_underflow_in_sstream(void)
+{
+	cs_opt_mem mem = { .malloc = malloc,
+			   .calloc = calloc,
+			   .realloc = realloc,
+			   .free = free,
+			   .vsnprintf = evil_vsnprintf };
+	cs_option(0, CS_OPT_MEM, (size_t)&mem);
+
+	SStream OS;
+	SStream_Init(&OS);
+	SStream_concat(&OS, "%s", "AAAA"); // index += -1
+	SStream_concat1(&OS, 'B'); // writes before buffer => crash/ASan hit
+	CHECK_OS_EQUAL_RET_FALSE(OS, "B");
+	CHECK_INT_EQUAL_RET_FALSE(OS.index, 1);
+	return true;
+}
+
 int main()
 {
 	bool result = true;
@@ -612,8 +683,10 @@ int main()
 	result &= test_stream_unsigned_imm();
 	result &= test_replc();
 	result &= test_replc_str();
+	result &= test_printfFloat();
 	result &= test_copy_mnem_opstr();
 	result &= test_trimls();
+	result &= test_underflow_in_sstream();
 	if (result) {
 		printf("All tests passed.\n");
 	} else {

@@ -18,7 +18,7 @@ typedef enum {
 
 typedef struct SStream {
 	char buffer[SSTREAM_BUF_LEN];
-	int index;
+	size_t index;
 	bool is_closed;
 	bool markup_stream; ///< If true, markups to the stream are allowed.
 	bool prefixed_by_markup; ///< Set after the stream wrote a markup for an operand.
@@ -93,6 +93,8 @@ void printUInt32(SStream *O, uint32_t val);
 void printInt32BangDec(SStream *O, int32_t val);
 
 void printFloat(SStream *O, float val);
+
+void printfFloat(SStream *ss, const char *fmt, float val);
 
 void printFloatBang(SStream *O, float val);
 

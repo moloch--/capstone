@@ -236,6 +236,10 @@ void SStream_concat(SStream *ss, const char *fmt, ...)
 	ret = cs_vsnprintf(ss->buffer + ss->index,
 			   sizeof(ss->buffer) - (ss->index + 1), fmt, ap);
 	va_end(ap);
+	if (ret < 0) {
+		return;
+	}
+	SSTREAM_OVERFLOW_CHECK(ss, ret);
 	ss->index += ret;
 	if (ss->markup_stream && ss->prefixed_by_markup) {
 		SSTREAM_OVERFLOW_CHECK(ss, 1);
@@ -504,6 +508,13 @@ void printFloat(SStream *ss, float val)
 	assert(ss);
 	SSTREAM_RETURN_IF_CLOSED(ss);
 	SStream_concat(ss, "%e", val);
+}
+
+void printfFloat(SStream *ss, const char *fmt, float val)
+{
+	assert(ss);
+	SSTREAM_RETURN_IF_CLOSED(ss);
+	SStream_concat(ss, fmt, val);
 }
 
 void printFloatBang(SStream *ss, float val)
