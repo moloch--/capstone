@@ -16,17 +16,22 @@ COPY . .
 
 RUN emcmake cmake -S . -B build \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCAPSTONE_BUILD_SHARED_LIBS=ON \
-  -DCAPSTONE_BUILD_STATIC_LIBS=OFF \
+  -DCAPSTONE_BUILD_SHARED_LIBS=OFF \
+  -DCAPSTONE_BUILD_STATIC_LIBS=ON \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DBUILD_STATIC_LIBS=ON \
   -DCAPSTONE_BUILD_CSTOOL=OFF \
+  -DCAPSTONE_BUILD_TESTS=OFF \
+  -DCAPSTONE_INSTALL=OFF \
   -DCMAKE_INSTALL_PREFIX=/opt/capstone \
-  -DCMAKE_SHARED_LIBRARY_SUFFIX=.wasm \
-  -DCMAKE_SHARED_LINKER_FLAGS="-sSIDE_MODULE=1 -sEXPORT_ALL=1 -sWASM_BIGINT=1 -sERROR_ON_UNDEFINED_SYMBOLS=0"
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 
-RUN cmake --build build --target capstone_shared -- -j"$(nproc)"
+RUN cmake --build build --target capstone_static -- -j"$(nproc)"
 RUN mkdir -p /opt/capstone/lib && \
+  CAPSTONE_A="$(find build -name libcapstone.a -print -quit)" && \
+  test -n "$CAPSTONE_A" && \
   emcc -sSIDE_MODULE=1 -sEXPORT_ALL=1 -sWASM_BIGINT=1 -sERROR_ON_UNDEFINED_SYMBOLS=0 \
-    -Wl,--whole-archive build/libcapstone.a -Wl,--no-whole-archive \
+    -Wl,--whole-archive "$CAPSTONE_A" -Wl,--no-whole-archive \
     -o /opt/capstone/lib/libcapstone.wasm
 
 FROM scratch AS artifact
