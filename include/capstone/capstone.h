@@ -205,6 +205,7 @@ typedef enum cs_mode {
 	CS_MODE_M680X_CPU12 = 1 << 9, ///< M680X Motorola/Freescale/NXP CPU12
 	///< used on M68HC12/HCS12
 	CS_MODE_M680X_HCS08 = 1 << 10, ///< M680X Freescale/NXP HCS08 mode
+	CS_MODE_M680X_RS08 = 1 << 11, ///< M680X Freescale/NXP RS08 mode
 	CS_MODE_BPF_CLASSIC = 0, ///< Classic BPF mode (default)
 	CS_MODE_BPF_EXTENDED = 1 << 0, ///< Extended BPF mode
 	CS_MODE_RISCV32 = 1 << 0, ///< RISCV RV32G
@@ -362,6 +363,9 @@ typedef enum cs_opt_value {
 	CS_OPT_SYNTAX_NO_ALIAS_TEXT =
 		1
 		<< 10, ///< Does not print an instruction's alias test if the instruction is an alias
+	CS_OPT_SYNTAX_NO_ALIAS_TEXT_COMPRESSED =
+		1
+		<< 11, ///< Does not print an instruction's alias test if the instruction is an alias
 	CS_OPT_DETAIL_REAL =
 		1
 		<< 1, ///< If enabled, always sets the real instruction detail. Even if the instruction is an alias.

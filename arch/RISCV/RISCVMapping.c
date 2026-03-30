@@ -262,6 +262,14 @@ static inline void RISCV_add_adhoc_groups(MCInst *MI)
 	RISCV_add_ret_group(MI);
 }
 
+// memset all stalled values in the detail struct to 0 before disassembling any next instruction
+void RISCV_init_cs_detail(MCInst *MI)
+{
+	if (detail_is_set(MI))
+		memset(get_detail(MI), 0,
+		       offsetof(cs_detail, riscv) + sizeof(cs_riscv));
+}
+
 // for weird reasons some instructions end up with valid operands that are
 // interspersed with invalid operands, i.e. the operands array is an "island"
 // of valid operands with invalid gaps between them, this function will compactify
@@ -348,8 +356,6 @@ void RISCV_get_insn_id(cs_struct *h, cs_insn *insn, unsigned int id)
 }
 
 static const char *const insn_name_maps[] = {
-	/*RISCV_INS_INVALID:*/ NULL,
-
 #include "RISCVGenCSMappingInsnName.inc"
 };
 

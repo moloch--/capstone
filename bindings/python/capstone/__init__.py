@@ -102,6 +102,7 @@ __all__ = [
     'CS_MODE_M680X_6811',
     'CS_MODE_M680X_CPU12',
     'CS_MODE_M680X_HCS08',
+    'CS_MODE_M680X_RS08',
     'CS_MODE_BPF_CLASSIC',
     'CS_MODE_BPF_EXTENDED',
     'CS_MODE_RISCV32',
@@ -209,6 +210,7 @@ __all__ = [
     'CS_OPT_SYNTAX_CS_REG_ALIAS',
     'CS_OPT_SYNTAX_NO_DOLLAR',
     'CS_OPT_SYNTAX_NO_ALIAS_TEXT',
+    'CS_OPT_SYNTAX_NO_ALIAS_TEXT_COMPRESSED',
 
     'CS_OPT_DETAIL',
     'CS_OPT_DETAIL_REAL',
@@ -399,6 +401,7 @@ CS_MODE_M680X_6809 = (1 << 7)  # M680X M6809 mode
 CS_MODE_M680X_6811 = (1 << 8)  # M680X M68HC11 mode
 CS_MODE_M680X_CPU12 = (1 << 9)  # M680X CPU12 mode
 CS_MODE_M680X_HCS08 = (1 << 10)  # M680X HCS08 mode
+CS_MODE_M680X_RS08 = (1 << 11) # M680X RS08 mode
 CS_MODE_BPF_CLASSIC = 0          # Classic BPF mode (default)
 CS_MODE_BPF_EXTENDED = (1 << 0)  # Extended BPF mode
 CS_MODE_RISCV32 = (1 << 0)       # RISCV32 mode
@@ -561,6 +564,7 @@ CS_OPT_SYNTAX_CS_REG_ALIAS = (1 << 7)  # Prints common register alias which are 
 CS_OPT_SYNTAX_PERCENT = (1 << 8)  # Prints the % in front of PPC registers.
 CS_OPT_SYNTAX_NO_DOLLAR = (1 << 9) # Does not print the $ in front of Mips, LoongArch registers.
 CS_OPT_SYNTAX_NO_ALIAS_TEXT = (1 << 10) # Does not print an instruction's alias test if the instruction is an alias
+CS_OPT_SYNTAX_NO_ALIAS_TEXT_COMPRESSED = (1 << 11) # Like the one above it, but only supresses compressed instruction aliases
 CS_OPT_DETAIL_REAL = (1 << 1)  # If enabled, always sets the real instruction detail.Even if the instruction is an alias.
 
 # Capstone error type

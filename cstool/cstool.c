@@ -69,6 +69,13 @@ static struct {
 	  { CS_ARCH_RISCV, CS_ARCH_MAX },
 	  CS_OPT_SYNTAX_NO_ALIAS_TEXT,
 	  0 },
+	{ "+noaliascompressed",
+	  "Does not print the text alias of compressed RISC-V instructions, "
+	  "but still prints the text alias of non-compressed RISC-V instructions "
+	  "if +noalias is not given",
+	  { CS_ARCH_RISCV, CS_ARCH_MAX },
+	  CS_OPT_SYNTAX_NO_ALIAS_TEXT_COMPRESSED,
+	  0 },
 	// cs_mode only
 	{ "+nofloat",
 	  "Disables floating point support",
@@ -427,7 +434,7 @@ static struct {
 	{ "hd6301", "m680x, HD6301/3", CS_ARCH_M680X, CS_MODE_M680X_6301 },
 	{ "hd6309", "m680x, HD6309", CS_ARCH_M680X, CS_MODE_M680X_6309 },
 	{ "hcs08", "m680x, HCS08", CS_ARCH_M680X, CS_MODE_M680X_HCS08 },
-
+	{ "rs08", "m680x, RS08", CS_ARCH_M680X, CS_MODE_M680X_RS08 },
 	{ "evm", "ethereum virtual machine", CS_ARCH_EVM, 0 },
 
 	{ "wasm", "web assembly", CS_ARCH_WASM, 0 },

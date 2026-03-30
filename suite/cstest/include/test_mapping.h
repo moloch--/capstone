@@ -95,6 +95,7 @@ static const cs_enum_id_map test_mode_map[] = {
 	{ .str = "CS_MODE_M680X_6811", .val = CS_MODE_M680X_6811 },
 	{ .str = "CS_MODE_M680X_CPU12", .val = CS_MODE_M680X_CPU12 },
 	{ .str = "CS_MODE_M680X_HCS08", .val = CS_MODE_M680X_HCS08 },
+	{ .str = "CS_MODE_M680X_RS08", .val = CS_MODE_M680X_RS08 },
 	{ .str = "CS_MODE_M68K_000", .val = CS_MODE_M68K_000 },
 	{ .str = "CS_MODE_M68K_010", .val = CS_MODE_M68K_010 },
 	{ .str = "CS_MODE_M68K_020", .val = CS_MODE_M68K_020 },
@@ -264,7 +265,11 @@ static const TestOptionMapEntry test_option_map[] = {
 	{ .str = "CS_OPT_SYNTAX_NO_DOLLAR",
 	  .opt = { .type = CS_OPT_SYNTAX, .val = CS_OPT_SYNTAX_NO_DOLLAR } },
 	{ .str = "CS_OPT_SYNTAX_NO_ALIAS_TEXT",
-	  .opt = { .type = CS_OPT_SYNTAX, .val = CS_OPT_SYNTAX_NO_ALIAS_TEXT } }
+	  .opt = { .type = CS_OPT_SYNTAX,
+		   .val = CS_OPT_SYNTAX_NO_ALIAS_TEXT } },
+	{ .str = "CS_OPT_SYNTAX_NO_ALIAS_TEXT_COMPRESSED",
+	  .opt = { .type = CS_OPT_SYNTAX,
+		   .val = CS_OPT_SYNTAX_NO_ALIAS_TEXT_COMPRESSED } }
 };
 
 static const cs_enum_id_map cs_enum_map[] = {
