@@ -152,3 +152,8 @@ suite/auto-sync/src/autosync.egg-info
 
 # clangd cache
 /.cache
+
+# Local WASM build artifacts
+/.tmp-emscripten/
+/dist/
+/dist-local/
